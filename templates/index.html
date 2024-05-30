@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Analysis</h1>
+        <p>Enter a statement below to analyze its sentiment. The result will show whether the sentiment is positive, negative, or neutral along with confidence scores.</p>
+        <form id="sentiment-form">
+            <label for="statement">Enter a statement:</label>
+            <input type="text" id="statement" name="statement" required>
+            <button type="submit">Analyze</button>
+            <button type="button" id="clear-button">Clear</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('sentiment-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const statement = document.getElementById('statement').value;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ statement: statement })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<p>Sentiment: <span class="${data.prediction.toLowerCase()}">${data.prediction}</span></p>`;
+                resultDiv.innerHTML += `<p>Scores:</p>`;
+                resultDiv.innerHTML += `<ul>`;
+                data.scores.forEach(score => {
+                    resultDiv.innerHTML += `<li>${score.label}: ${score.score.toFixed(2)}%</li>`;
+                });
+                resultDiv.innerHTML += `</ul>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        document.getElementById('clear-button').addEventListener('click', function() {
+            document.getElementById('statement').value = '';
+            document.getElementById('result').innerHTML = '';
+        });
+    </script>
+</body>
+</html>
